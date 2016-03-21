@@ -7,3 +7,4 @@ nbproject/genfiles.properties
 *.properties
 nbproject/build-impl.xml
 *.xml
+all.log

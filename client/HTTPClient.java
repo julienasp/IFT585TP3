@@ -1,5 +1,7 @@
 package client;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URI;
@@ -66,21 +68,45 @@ public class HTTPClient {
     /**************************************/
     /*************   METHODS  *************/
     /**************************************/
-    public int enableConnection(String fullURL){        
+    private String createRequestHeader(){
+        
+        logger.info("HTTPClient: createRequestHeader() is being execute!");
+        
+        //Formating the header
+        String header = "GET "+ distantHostURI + " HTTP/1.1" + "\r\n" 
+                    + "Host: " + distantHostName + "\r\n" 
+                    + "Connection: close" + "\r\n";
+        
+        logger.info("HTTPClient: createRequestHeader() return this header: " + header);
+        
+        return header;
+    }
+    public int enableConnection(String domainURL){  
+        
+        logger.info("HTTPClient: enableConnection() is being execute!");
+        logger.info("HTTPClient: enableConnection() : we need to connect to: " + domainURL);
         try {
-            URI oURI = new URI(fullURL);
+            
+            logger.info("HTTPClient: enableConnection() : we extract the information from the given URL");
+            
+            URI oURI = new URI(domainURL);
             distantHostName = oURI.getHost();
-            distantHostName = distantHostName.startsWith("www.") ? distantHostName.substring(4) : distantHostName;
+            distantHostName = distantHostName.startsWith("www.") ? distantHostName.substring(4) : distantHostName;            
             distantHostURI = oURI.getPath();
+            logger.info("HTTPClient: enableConnection() : distantHostName is: " + distantHostName);
+            logger.info("HTTPClient: enableConnection() : distantHostURI is: " + distantHostURI);
         } catch (URISyntaxException ex) {
             Logger.getLogger(HTTPClient.class.getName()).log(Level.SEVERE, null, ex);
         }
     
         //We fetch the ip address with DNSClient
-        InetAddress domainInetAdress = DNSClient.resolveDomain(distantHostName);        
+        InetAddress domainInetAdress = DNSClient.resolveDomain(distantHostName);
+        logger.info("HTTPClient: enableConnection() : we try to resolve the domain IP with DNSClient.");
         try {
             //Connection established 
             httpClientSocket = new Socket(domainInetAdress,80);
+            
+            logger.info("HTTPClient: enableConnection() : the connection is established.");
             return 1; // Connection established
         } catch (IOException ex) {
             Logger.getLogger(HTTPClient.class.getName()).log(Level.SEVERE, null, ex);
@@ -88,33 +114,22 @@ public class HTTPClient {
         }       
     }
     
-    public String createRequestHeader(String domainURL){
+ 
+    
+    public void executeRequest(){        
         try {
-            URI oURI = new URI(domainURL);
-            String hostName = oURI.getHost();
-            hostName = hostName.startsWith("www.") ? hostName.substring(4) : hostName;
-            String header = "GET "+ distantHostURI + " HTTP/1.1" + "\r\n" 
-                    + "Host: " + hostName + "\r\n" 
-                    + "Connection: close" + "\r\n";
-            return header;
-        } catch (URISyntaxException ex) {
+            String request = createRequestHeader();
+            OutputStream os = httpClientSocket.getOutputStream();
+            os.write(request.getBytes());
+            os.flush();
+            
+            InputStream is = httpClientSocket.getInputStream();
+            int ch;
+            while( (ch=is.read())!= -1)
+                logger.info((char)ch);  
+            httpClientSocket.close();
+        } catch (IOException ex) {
             Logger.getLogger(HTTPClient.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return null;
-    }
-    
-    public void executeRequest(){
-    
-        
-        String request = createRequestHeader;
-        OutputStream os = socket.getOutputStream();
-        os.write(request.getBytes());
-        os.flush();
-
-        InputStream is = socket.getInputStream();
-        int ch;
-        while( (ch=is.read())!= -1)
-            System.out.print((char)ch);
-        socket.close();  
     }
 }

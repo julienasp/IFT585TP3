@@ -1,4 +1,5 @@
 
+import client.HTTPClient;
 import java.util.Scanner;
 import org.apache.log4j.Logger;
 
@@ -7,35 +8,24 @@ public class StartPoint {
     //Private attribut for logging purposes
     private static final Logger logger = Logger.getLogger(StartPoint.class);    
 	public static void main(String[] args) {
-            
-                
-                
-                
 
-		Scanner sc = new Scanner(System.in);
+		Scanner sc = new Scanner(System.in);                
+                System.out.println("Veuillez saisir le URL complet du site internet que vous souhaitez récupérer ? Ex. http://ici.radio-canada.ca/techno");             
                 
-                System.out.println("Quels algorithme de routage souhaitez-vous utiliser ? ");
-                System.out.println("1 --- LS (Link-state) --- ");
-                System.out.println("2 --- DV (Distance-vector) --- ");
-                System.out.println("0 --- Aucun --- ");
+                String choixUser = sc.nextLine();
                 
-                int choixUser = sc.nextInt();
-		
-                switch (choixUser) 
-                {
-                case 0:
-
-                        sc.close();
-                        break;
-
-                case 1:
-                                               
-                        break;
-
-                case 2: 
-                                              
-                        break;
+                HTTPClient myHTTPClient = new HTTPClient();
+                
+                if( myHTTPClient.enableConnection(choixUser) == 1 ){
+                    logger.info("StartPoint: La connexion a été établie");
+                    myHTTPClient.executeRequest();
                 }
+                else{
+                    logger.info("StartPoint: il semble y avoit un problème au niveau de la connexion");
+                }
+                
+		
+                
 		
                 
                 
