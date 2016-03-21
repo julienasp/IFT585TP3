@@ -1,4 +1,5 @@
 package client;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -74,8 +75,9 @@ public class HTTPClient {
         
         //Formating the header
         String header = "GET "+ distantHostURI + " HTTP/1.1" + "\r\n" 
-                    + "Host: " + distantHostName + "\r\n" 
-                    + "Connection: close" + "\r\n";
+                    + "Host: " + distantHostName + "\r\n"
+                    + "Cache-Control: no-cache" + "\r\n"
+                    + "Connection: close" + "\r\n\r\n";
         
         logger.info("HTTPClient: createRequestHeader() return this header: " + header);
         
@@ -103,10 +105,10 @@ public class HTTPClient {
         InetAddress domainInetAdress = DNSClient.resolveDomain(distantHostName);
         logger.info("HTTPClient: enableConnection() : we try to resolve the domain IP with DNSClient.");
         try {
+            logger.info("HTTPClient: enableConnection() : Waiting for connection.");
             //Connection established 
-            httpClientSocket = new Socket(domainInetAdress,80);
-            
-            logger.info("HTTPClient: enableConnection() : the connection is established.");
+            httpClientSocket = new Socket(domainInetAdress,80); 
+            logger.info("HTTPClient: enableConnection() : The connection has been established.");
             return 1; // Connection established
         } catch (IOException ex) {
             Logger.getLogger(HTTPClient.class.getName()).log(Level.SEVERE, null, ex);
@@ -118,15 +120,19 @@ public class HTTPClient {
     
     public void executeRequest(){        
         try {
+            byte[] buffer = new byte[1500];
             String request = createRequestHeader();
             OutputStream os = httpClientSocket.getOutputStream();
             os.write(request.getBytes());
             os.flush();
             
             InputStream is = httpClientSocket.getInputStream();
-            int ch;
-            while( (ch=is.read())!= -1)
-                logger.info((char)ch);  
+            BufferedInputStream bis = new BufferedInputStream(is);
+                        
+            while( (bis.read(buffer))!= -1){
+                logger.info("HTTPClient: executeRequest(): receving a byte of data");                
+                logger.info("HTTPClient: executeRequest(): value of the byte of data is: " + new String(buffer));
+            }
             httpClientSocket.close();
         } catch (IOException ex) {
             Logger.getLogger(HTTPClient.class.getName()).log(Level.SEVERE, null, ex);

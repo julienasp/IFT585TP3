@@ -18,7 +18,7 @@ public class DNSClient {
     private static final org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(DNSClient.class);  
     public static InetAddress resolveDomain(String domain){        
         try {
-            logger.info("DNSClient: the translation for the domain:" + domain + " is :" + InetAddress.getByName(domain).getAddress().toString()); 
+            logger.info("DNSClient: the translation for the domain:" + domain + " is: " + InetAddress.getByName(domain).getHostAddress()); 
             return InetAddress.getByName(domain);
         } catch (UnknownHostException ex) {            
             Logger.getLogger(DNSClient.class.getName()).log(Level.SEVERE, null, ex);
