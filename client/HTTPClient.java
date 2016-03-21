@@ -133,6 +133,8 @@ public class HTTPClient {
                 logger.info("HTTPClient: executeRequest(): receving a byte of data");                
                 logger.info("HTTPClient: executeRequest(): value of the byte of data is: " + new String(buffer));
             }
+            //REGEX <img.*?src="(.*?)".*?>/g
+            //REGEX \/[a-zA-Z0-9-_]*?.(jpg|gif|tiff|jpeg)/g
             httpClientSocket.close();
         } catch (IOException ex) {
             Logger.getLogger(HTTPClient.class.getName()).log(Level.SEVERE, null, ex);

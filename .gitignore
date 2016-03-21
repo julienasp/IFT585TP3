@@ -8,3 +8,4 @@ nbproject/genfiles.properties
 nbproject/build-impl.xml
 *.xml
 all.log
+!/log4j2.xml
