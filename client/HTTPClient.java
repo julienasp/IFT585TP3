@@ -10,6 +10,8 @@ import java.net.URISyntaxException;
 import java.util.Hashtable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /*
@@ -83,6 +85,29 @@ public class HTTPClient {
         
         return header;
     }
+    
+    private void extractImageFromURL(String source){
+        logger.info("HTTPClient: extractImageFromURL() is being execute!");
+        String patternForImageURL = "<img.*?src=\"(.*?)\".*?>";
+        String patternForImageName = "\\/[a-zA-Z0-9-_]*?.(jpg|gif|tiff|jpeg)";
+        Pattern patternForPath = Pattern.compile(patternForImageURL);
+        Pattern patternForName = Pattern.compile(patternForImageName);
+        Matcher matcherForPath = patternForPath.matcher(source);
+               
+        //we iterate through the string to find any matches
+        while(matcherForPath.find()) {            
+            String url = source.substring(matcherForPath.start(), matcherForPath.end());
+            logger.info("HTTPClient: extractImageFromURL() we found a match for the url: " + url);
+            Matcher matcherForName = patternForName.matcher(url);
+            String name = source.substring(matcherForName.start(), matcherForName.end());
+            logger.info("HTTPClient: extractImageFromURL() we found a match for the file name: " + name);
+            //We add the img name and its url to the ImageList
+            addImageURLToImageList(name,url);
+            logger.info("HTTPClient: extractImageFromURL() the image name and its url were added to the list.");
+        }
+         
+    }
+    
     public int enableConnection(String domainURL){  
         
         logger.info("HTTPClient: enableConnection() is being execute!");
@@ -130,11 +155,11 @@ public class HTTPClient {
             BufferedInputStream bis = new BufferedInputStream(is);
                         
             while( (bis.read(buffer))!= -1){
+                String tempString = new String(buffer);
+                extractImageFromURL(tempString);
                 logger.info("HTTPClient: executeRequest(): receving a byte of data");                
-                logger.info("HTTPClient: executeRequest(): value of the byte of data is: " + new String(buffer));
+                logger.info("HTTPClient: executeRequest(): value of the byte of data is: " + tempString);
             }
-            //REGEX <img.*?src="(.*?)".*?>/g
-            //REGEX \/[a-zA-Z0-9-_]*?.(jpg|gif|tiff|jpeg)/g
             httpClientSocket.close();
         } catch (IOException ex) {
             Logger.getLogger(HTTPClient.class.getName()).log(Level.SEVERE, null, ex);
