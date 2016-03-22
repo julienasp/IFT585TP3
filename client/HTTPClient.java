@@ -89,21 +89,23 @@ public class HTTPClient {
     private void extractImageFromURL(String source){
         logger.info("HTTPClient: extractImageFromURL() is being execute!");
         String patternForImageURL = "<img.*?src=\"(.*?)\".*?>";
-        String patternForImageName = "\\/[a-zA-Z0-9-_]*?.(jpg|gif|tiff|jpeg)";
+        String patternForImageName = "\\/([a-zA-Z0-9-_]*?.(jpg|gif|tiff|jpeg))";
         Pattern patternForPath = Pattern.compile(patternForImageURL);
         Pattern patternForName = Pattern.compile(patternForImageName);
         Matcher matcherForPath = patternForPath.matcher(source);
                
         //we iterate through the string to find any matches
         while(matcherForPath.find()) {            
-            String url = source.substring(matcherForPath.start(), matcherForPath.end());
+            String url = matcherForPath.group(1);
             logger.info("HTTPClient: extractImageFromURL() we found a match for the url: " + url);
             Matcher matcherForName = patternForName.matcher(url);
-            String name = source.substring(matcherForName.start(), matcherForName.end());
-            logger.info("HTTPClient: extractImageFromURL() we found a match for the file name: " + name);
-            //We add the img name and its url to the ImageList
-            addImageURLToImageList(name,url);
-            logger.info("HTTPClient: extractImageFromURL() the image name and its url were added to the list.");
+            if(matcherForName.find()){
+                String name = matcherForName.group(1);
+                logger.info("HTTPClient: extractImageFromURL() we found a match for the file name: " + name);
+                //We add the img name and its url to the ImageList
+                addImageURLToImageList(name,url);
+                logger.info("HTTPClient: extractImageFromURL() the image name and its url were added to the list."); 
+            }
         }
          
     }
@@ -119,7 +121,7 @@ public class HTTPClient {
             URI oURI = new URI(domainURL);
             distantHostName = oURI.getHost();
             distantHostName = distantHostName.startsWith("www.") ? distantHostName.substring(4) : distantHostName;            
-            distantHostURI = oURI.getPath();
+            distantHostURI = oURI.getPath().isEmpty() ? "/index.html": oURI.getPath();            
             logger.info("HTTPClient: enableConnection() : distantHostName is: " + distantHostName);
             logger.info("HTTPClient: enableConnection() : distantHostURI is: " + distantHostURI);
         } catch (URISyntaxException ex) {
