@@ -8,6 +8,9 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -66,6 +69,21 @@ public class HTTPClient {
     
     public void removeImageURLFromImageList(String imageName,String imageURL) {
        imageList.remove(imageName);
+    }
+    
+    public void showImageListContent(){
+        //Création d'un set pour parcourir la Hashtable
+        Set set = this.getImageList().entrySet();
+
+        //Création d'un iterator pour parcourir notre set
+        Iterator it = set.iterator();
+
+        //Boucle while qui parcours le set.
+        while (it.hasNext()) {
+          Map.Entry entry = (Map.Entry) it.next();
+          logger.info("StartPoint: Nous avons l'image suivante: " + (String) entry.getKey());
+          logger.info("StartPoint: et son url est le suivant: " + (String) entry.getValue());                  
+        }
     }
      
     /**************************************/

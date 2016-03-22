@@ -1,6 +1,9 @@
 
 import client.HTTPClient;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import org.apache.log4j.Logger;
 
 
@@ -19,17 +22,11 @@ public class StartPoint {
                 if( myHTTPClient.enableConnection(choixUser) == 1 ){
                     logger.info("StartPoint: La connexion a été établie");
                     myHTTPClient.executeRequest();
+                    myHTTPClient.showImageListContent();
                 }
                 else{
                     logger.info("StartPoint: il semble y avoit un problème au niveau de la connexion");
                 }
-                
-		
-                
-		
-                
-                
-                
 	}
 
 }
