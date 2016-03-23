@@ -1,5 +1,6 @@
 package client;
 import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -161,7 +162,7 @@ public class HTTPClient {
         }       
     }
     
- 
+    
     
     public void executeRequest(){        
         try {
@@ -183,6 +184,49 @@ public class HTTPClient {
             httpClientSocket.close();
         } catch (IOException ex) {
             Logger.getLogger(HTTPClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private void executeRequestForImageDownload(String imageFileName){        
+        try {
+            byte[] buffer = new byte[1500];
+            String request = createRequestHeader();
+            OutputStream os = httpClientSocket.getOutputStream();
+            os.write(request.getBytes());
+            os.flush();
+            
+            InputStream is = httpClientSocket.getInputStream();
+            BufferedInputStream bis = new BufferedInputStream(is);
+            FileOutputStream out = new FileOutputStream("/images/" + imageFileName, true);           
+                              
+            while( (bis.read(buffer))!= -1){
+                String tempString = new String(buffer);
+                out.write(buffer);
+                logger.info("HTTPClient: executeRequestForImageDownload(): receving a byte of data");                
+                logger.info("HTTPClient: executeRequestForImageDownload(): value of the byte of data is: " + tempString);
+            }
+            out.close(); 
+            httpClientSocket.close();
+        } catch (IOException ex) {
+            Logger.getLogger(HTTPClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    
+    public void downloadImages(){
+        //Création d'un set pour parcourir la Hashtable
+        Set set = this.getImageList().entrySet();
+
+        //Création d'un iterator pour parcourir notre set
+        Iterator it = set.iterator();
+
+        //Boucle while qui parcours le set.
+        while (it.hasNext()) {
+          Map.Entry entry = (Map.Entry) it.next();
+          enableConnection((String) entry.getValue());
+          executeRequestForImageDownload((String) entry.getKey());
+          logger.info("StartPoint: Nous avons l'image suivante: " + (String) entry.getKey());
+          logger.info("StartPoint: et son url est le suivant: " + (String) entry.getValue());                  
         }
     }
 }

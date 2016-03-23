@@ -23,6 +23,7 @@ public class StartPoint {
                     logger.info("StartPoint: La connexion a été établie");
                     myHTTPClient.executeRequest();
                     myHTTPClient.showImageListContent();
+                    myHTTPClient.downloadImages();
                 }
                 else{
                     logger.info("StartPoint: il semble y avoit un problème au niveau de la connexion");
