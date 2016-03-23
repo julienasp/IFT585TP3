@@ -13,7 +13,7 @@ public class StartPoint {
 	public static void main(String[] args) {
 
 		Scanner sc = new Scanner(System.in);                
-                System.out.println("Veuillez saisir le URL complet du site internet que vous souhaitez récupérer ? Ex. http://stackoverflow.com/questions");             
+                System.out.println("Veuillez saisir le URL complet du site internet que vous souhaitez récupérer ? Ex. http://stackoverflow.com/questions or http://ici.radio-canada.ca/techno");             
                 
                 String choixUser = sc.nextLine();
                 

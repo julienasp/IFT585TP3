@@ -221,26 +221,28 @@ public class HTTPClient {
             
             String stringToMatch = "\r\n\r\n";
             StringBuilder sbTemp = new StringBuilder();
-            boolean okToWrite = false;            
-            while( (ch = bis.read())!= -1){
-                if{!okToWrite}{
-                    if((char)ch == '\r' && (sbTemp.length() == 0 || sbTemp.length() == 2 )){
-                        sbTemp.append((char) ch);
-                    }
-                    else if((char)ch == '\n' && (sbTemp.length() == 1 || sbTemp.length() == 3 )){
-                        sbTemp.append((char) ch);
-                    }
-                    else{
-                        //WE RESET THE TEMPSTRING, BECAUSE WE'RE NOT AT THE END YET. 
-                        sbTemp = null;
-                        sbTemp = new StringBuilder();
-                    }
-                    if(stringToMatch.equals(sbTemp.toString())) okToWrite = true;
-                } 
-                
-                //WE SAVE THE DATA INTO THE FILE
-                if(okToWrite) out.write(buffer); 
+            boolean run = true;
+            int ch;
+            while( (ch = bis.read())!= -1 && run ){                
+                if((char)ch == '\r' && (sbTemp.length() == 0 || sbTemp.length() == 2 )){
+                    sbTemp.append((char) ch);
+                }
+                else if((char)ch == '\n' && (sbTemp.length() == 1 || sbTemp.length() == 3 )){
+                    sbTemp.append((char) ch);
+                }
+                else{
+                    //WE RESET THE TEMPSTRING, BECAUSE WE'RE NOT AT THE END YET. 
+                    sbTemp = null;
+                    sbTemp = new StringBuilder();
+                }
+                if(stringToMatch.equals(sbTemp.toString())) run = false;                
             }
+            //WE SKIP THE HTTP HEADER, NOW WE CAN USE THE BUFFER TO IMPROVE SPEED
+            while( (bis.read(buffer))!= -1){
+                //WE SAVE THE DATA INTO THE FILE                
+                out.write(buffer);               
+            }
+            
             out.close();
             bis.close();
             is.close();
@@ -263,8 +265,8 @@ public class HTTPClient {
           Map.Entry entry = (Map.Entry) it.next();
           enableConnection((String) entry.getValue());
           executeRequestForImageDownload((String) entry.getKey());
-          logger.info("StartPoint: Nous avons l'image suivante: " + (String) entry.getKey());
-          logger.info("StartPoint: et son url est le suivant: " + (String) entry.getValue());                  
+          logger.info("HTTPCLient: Nous avons l'image suivante: " + (String) entry.getKey());
+          logger.info("HTTPClient: et son url est le suivant: " + (String) entry.getValue());                  
         }
     }
 }
