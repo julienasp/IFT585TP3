@@ -105,6 +105,21 @@ public class HTTPClient {
         return header;
     }
     
+     private String createHeadRequestHeader(){
+        
+        logger.info("HTTPClient: createHeadRequestHeader() is being execute!");
+        
+        //Formating the header
+        String header = "HEAD "+ distantHostURI + " HTTP/1.1" + "\r\n" 
+                    + "Host: " + distantHostName + "\r\n"
+                    + "Cache-Control: no-cache" + "\r\n"
+                    + "Connection: close" + "\r\n\r\n";
+        
+        logger.info("HTTPClient: createHeadRequestHeader() return this header: " + header);
+        
+        return header;
+    }
+    
     private void extractImageFromURL(String source){
         logger.info("HTTPClient: extractImageFromURL() is being execute!");
         String patternForImageURL = "<img.*?src=\"(.*?)\".*?>";
@@ -188,24 +203,31 @@ public class HTTPClient {
     }
     
     private void executeRequestForImageDownload(String imageFileName){        
-        try {
-            byte[] buffer = new byte[1500];
+        try {            
+            byte[] buffer = new byte[1500];  
+            
+            //We create the GET request header            
             String request = createRequestHeader();
+            
+            //We send the request to the server
             OutputStream os = httpClientSocket.getOutputStream();
             os.write(request.getBytes());
             os.flush();
             
+            //We handle the respond
             InputStream is = httpClientSocket.getInputStream();
             BufferedInputStream bis = new BufferedInputStream(is);
-            FileOutputStream out = new FileOutputStream("/images/" + imageFileName, true);           
-                              
+            FileOutputStream out = new FileOutputStream("./images/" + imageFileName, true);           
+            
             while( (bis.read(buffer))!= -1){
                 String tempString = new String(buffer);
-                out.write(buffer);
+                out.write(buffer);                
                 logger.info("HTTPClient: executeRequestForImageDownload(): receving a byte of data");                
                 logger.info("HTTPClient: executeRequestForImageDownload(): value of the byte of data is: " + tempString);
             }
-            out.close(); 
+            out.close();
+            bis.close();
+            is.close();
             httpClientSocket.close();
         } catch (IOException ex) {
             Logger.getLogger(HTTPClient.class.getName()).log(Level.SEVERE, null, ex);
