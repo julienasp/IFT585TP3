@@ -219,11 +219,27 @@ public class HTTPClient {
             BufferedInputStream bis = new BufferedInputStream(is);
             FileOutputStream out = new FileOutputStream("./images/" + imageFileName, true);           
             
-            while( (bis.read(buffer))!= -1){
-                String tempString = new String(buffer);
-                out.write(buffer);                
-                logger.info("HTTPClient: executeRequestForImageDownload(): receving a byte of data");                
-                logger.info("HTTPClient: executeRequestForImageDownload(): value of the byte of data is: " + tempString);
+            String stringToMatch = "\r\n\r\n";
+            StringBuilder sbTemp = new StringBuilder();
+            boolean okToWrite = false;            
+            while( (ch = bis.read())!= -1){
+                if{!okToWrite}{
+                    if((char)ch == '\r' && (sbTemp.length() == 0 || sbTemp.length() == 2 )){
+                        sbTemp.append((char) ch);
+                    }
+                    else if((char)ch == '\n' && (sbTemp.length() == 1 || sbTemp.length() == 3 )){
+                        sbTemp.append((char) ch);
+                    }
+                    else{
+                        //WE RESET THE TEMPSTRING, BECAUSE WE'RE NOT AT THE END YET. 
+                        sbTemp = null;
+                        sbTemp = new StringBuilder();
+                    }
+                    if(stringToMatch.equals(sbTemp.toString())) okToWrite = true;
+                } 
+                
+                //WE SAVE THE DATA INTO THE FILE
+                if(okToWrite) out.write(buffer); 
             }
             out.close();
             bis.close();
