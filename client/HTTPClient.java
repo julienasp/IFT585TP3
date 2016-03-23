@@ -1,5 +1,6 @@
 package client;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -203,9 +204,7 @@ public class HTTPClient {
     }
     
     private void executeRequestForImageDownload(String imageFileName){        
-        try {            
-            byte[] buffer = new byte[1024];  
-            
+        try {  
             //We create the GET request header            
             String request = createRequestHeader();
             
@@ -217,7 +216,8 @@ public class HTTPClient {
             //We handle the respond
             InputStream is = httpClientSocket.getInputStream();
             BufferedInputStream bis = new BufferedInputStream(is);
-            FileOutputStream out = new FileOutputStream("./images/" + imageFileName, true);           
+            FileOutputStream out = new FileOutputStream("./images/" + imageFileName, true);
+            BufferedOutputStream bos = new BufferedOutputStream(out);
             
             String stringToMatch = "\r\n\r\n";
             StringBuilder sbTemp = new StringBuilder();
@@ -239,22 +239,15 @@ public class HTTPClient {
                 }
                 if(stringToMatch.equals(sbTemp.toString())) run = false;                
             }
-            /*
+            
             //WE SKIPPED THE HTTP HEADER, NOW WE CAN USE THE BUFFER TO IMPROVE SPEED
-            while( (bis.read(buffer))!= -1){
+            while( (ch = bis.read())!= -1){
                 //WE SAVE THE DATA INTO THE FILE                
-                out.write(buffer);
-                
-                //WE EMPTY THE BUFFER
-                buffer = null;
-                buffer = new byte[1024];
-            }*/
-            while((ch = bis.read()) != -1){
-                os.write(ch);
+                bos.write(ch);                
             }
-            out.close();
+           
+            bos.close();
             bis.close();
-            is.close();
             httpClientSocket.close();
         } catch (IOException ex) {
             Logger.getLogger(HTTPClient.class.getName()).log(Level.SEVERE, null, ex);
