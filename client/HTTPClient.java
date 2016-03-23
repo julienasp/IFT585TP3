@@ -204,7 +204,7 @@ public class HTTPClient {
     
     private void executeRequestForImageDownload(String imageFileName){        
         try {            
-            byte[] buffer = new byte[1500];  
+            byte[] buffer = new byte[1024];  
             
             //We create the GET request header            
             String request = createRequestHeader();
@@ -223,7 +223,9 @@ public class HTTPClient {
             StringBuilder sbTemp = new StringBuilder();
             boolean run = true;
             int ch;
-            while( (ch = bis.read())!= -1 && run ){                
+            
+            //WE LOOP UNTIL WE GET THE END OF THE HEADER
+            while( run && (ch = bis.read())!= -1  ){                
                 if((char)ch == '\r' && (sbTemp.length() == 0 || sbTemp.length() == 2 )){
                     sbTemp.append((char) ch);
                 }
@@ -237,12 +239,19 @@ public class HTTPClient {
                 }
                 if(stringToMatch.equals(sbTemp.toString())) run = false;                
             }
-            //WE SKIP THE HTTP HEADER, NOW WE CAN USE THE BUFFER TO IMPROVE SPEED
+            /*
+            //WE SKIPPED THE HTTP HEADER, NOW WE CAN USE THE BUFFER TO IMPROVE SPEED
             while( (bis.read(buffer))!= -1){
                 //WE SAVE THE DATA INTO THE FILE                
-                out.write(buffer);               
+                out.write(buffer);
+                
+                //WE EMPTY THE BUFFER
+                buffer = null;
+                buffer = new byte[1024];
+            }*/
+            while((ch = bis.read()) != -1){
+                os.write(ch);
             }
-            
             out.close();
             bis.close();
             is.close();
