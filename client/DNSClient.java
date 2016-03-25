@@ -129,9 +129,6 @@ public class DNSClient {
                 String qname = readName(dis);
                 logger.info("DNSClient: handleResponse(): Question QNAME: " + qname);
                 
-                String qname2 = readName(dis);
-                logger.info("DNSClient: handleResponse(): Question QNAME: " + qname2);
-                
                 int qtype = dis.readUnsignedShort();
                 logger.info("DNSClient: handleResponse(): Question QTYPE: " + qtype);
                 
