@@ -38,7 +38,11 @@ public class HTTPClient {
     private String distantHostName = null;
     private String distantHostURI = null;
     private Hashtable<String, String> imageList = new Hashtable<String,String>();
+    private String choixDNS;
 
+    public HTTPClient(String choixDNS) {
+        this.choixDNS = choixDNS;
+    }
     
     /**************************************/
     /********* GETTER AND SETTER **********/
@@ -164,8 +168,14 @@ public class HTTPClient {
         }
     
         //We fetch the ip address with DNSClient
-        //InetAddress domainInetAdress = DNSClient.resolveDomain(distantHostName);
-        InetAddress domainInetAdress = DNSClient.ninjaResolveDomain(distantHostName);
+        InetAddress domainInetAdress;
+        if(choixDNS == "1"){
+            domainInetAdress = DNSClient.ninjaResolveDomain(distantHostName);
+        }
+        else{
+            domainInetAdress = DNSClient.resolveDomain(distantHostName); 
+        }        
+       
         logger.info("HTTPClient: enableConnection() : we try to resolve the domain IP with DNSClient.");
         try {
             logger.info("HTTPClient: enableConnection() : Waiting for connection.");

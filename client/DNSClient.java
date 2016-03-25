@@ -116,15 +116,19 @@ public class DNSClient {
             byte[] lenString = new byte[dis.readUnsignedByte()];
             dis.readFully(lenString);
             String domain = new String(lenString);
+            logger.info("DNSClient: handleResponse(): Answer string: " + new String(lenString));
             int type = dis.readUnsignedShort();
+            logger.info("DNSClient: handleResponse(): Answer Type: " + type);
             int dnsClass = dis.readUnsignedShort();
-            int ttl = (dis.readUnsignedShort() << 16) + dis.readUnsignedShort();;
+            logger.info("DNSClient: handleResponse(): Answer dnsClass: " + dnsClass);
+            int ttl = dis.readUnsignedShort();
+            logger.info("DNSClient: handleResponse(): Answer ttl: " + ttl);
             int len = dis.readUnsignedShort();
             
-            logger.info("DNSClient: handleResponse(): Answer string: " + new String(lenString));
-            logger.info("DNSClient: handleResponse(): Answer Type: " + type);
-            logger.info("DNSClient: handleResponse(): Answer dnsClass: " + dnsClass);
-            logger.info("DNSClient: handleResponse(): Answer ttl: " + ttl);
+            
+            
+            
+            
             logger.info("DNSClient: handleResponse(): Answer len: " + len);
             
             int end = offset + len;
