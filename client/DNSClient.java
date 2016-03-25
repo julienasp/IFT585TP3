@@ -82,11 +82,24 @@ public class DNSClient {
     
     private static String readName(DataInputStream dis){
         try {
-            int nbByteToRead = dis.readByte();
-            logger.info("DNSClient: readName(): Question nb of byte required for QNAME: " + nbByteToRead);
-            byte[] len = new byte[nbByteToRead];
-            dis.readFully(len);
-            return new String(len);
+            boolean endOfName = false;
+            String name = "";
+            while(!endOfName){
+                int nbByteToRead = dis.readByte();
+                logger.info("DNSClient: readName(): Question nb of byte required for QNAME: " + nbByteToRead);
+                if(nbByteToRead==0){
+                    endOfName = true;
+                    logger.info("DNSClient: readName(): the end of name marker was found!");
+                }
+                else{                
+                    byte[] len = new byte[nbByteToRead];
+                    dis.readFully(len);
+                    String temp = new String(len);
+                    logger.info("DNSClient: readName(): We found the name: " + temp);
+                    name = (name.length() == 0) ? temp: name + "." + temp;
+                }
+            }
+            return name;
         } catch (IOException ex) {
             Logger.getLogger(DNSClient.class.getName()).log(Level.SEVERE, null, ex);
         }
