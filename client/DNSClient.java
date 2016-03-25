@@ -99,29 +99,41 @@ public class DNSClient {
         // parse questions
         if (nbQuestions > 0){
             for (int i = 0; i < nbQuestions; i++){
-                byte[] len = new byte[dis.readUnsignedByte()];
+                int nbByteQName = dis.readByte();
+                logger.info("DNSClient: handleResponse(): Question # Of byte required for QNAME: " + nbByteQName);
+                byte[] len = new byte[nbByteQName];
                 dis.readFully(len);
-                int short1 = dis.readUnsignedShort();
-                int short2 = dis.readUnsignedShort();
-                logger.info("DNSClient: handleResponse(): Question string: " + new String(len));
-                logger.info("DNSClient: handleResponse(): Question short1: " + short1);
-                logger.info("DNSClient: handleResponse(): Question short2: " + short2);
+                String qname = new String(len);
+                logger.info("DNSClient: handleResponse(): Question QNAME: " + qname);
+                
+                int nbByteQNameEnd = dis.readByte();
+                logger.info("DNSClient: handleResponse(): Question # Of byte required for QNAME PART 2: " + nbByteQNameEnd);
+                len = new byte[nbByteQNameEnd];
+                dis.readFully(len);
+                String qname2 = new String(len);
+                logger.info("DNSClient: handleResponse(): Question QNAME: " + qname2);
+                
+                int qtype = dis.readUnsignedShort();
+                logger.info("DNSClient: handleResponse(): Question QTYPE: " + qtype);
+                
+                int qclass = dis.readUnsignedShort();
+                logger.info("DNSClient: handleResponse(): Question QCLASS: " + qclass);
             }
         }
         
         respondAnswers = Collections.synchronizedList(new ArrayList(nbAnswers));
         
         for (int i = 0; i < nbAnswers; i++){
-        
+            
             byte[] lenString = new byte[dis.readUnsignedByte()];
             dis.readFully(lenString);
-            String domain = new String(lenString);
-            logger.info("DNSClient: handleResponse(): Answer string: " + new String(lenString));
+            String domain = new String(lenString);            
+            logger.info("DNSClient: handleResponse(): Answer string: " + domain);
             int type = dis.readUnsignedShort();
             logger.info("DNSClient: handleResponse(): Answer Type: " + type);
             int dnsClass = dis.readUnsignedShort();
             logger.info("DNSClient: handleResponse(): Answer dnsClass: " + dnsClass);
-            long ttl = (dis.readInt() & 0xffffffffL);
+            long ttl = (dis.readInt() & 0xffffffffL); // read unsigned int needed
             logger.info("DNSClient: handleResponse(): Answer ttl: " + ttl);
             int len = dis.readUnsignedShort();
             logger.info("DNSClient: handleResponse(): Answer len: " + len);
@@ -131,10 +143,10 @@ public class DNSClient {
             if(type == 1){ // TYPE A
                 logger.info("DNSClient: handleResponse(): We add the answer in the answer list");
                 byte[] adrTypeA = new byte[len];
-                logger.info("DNSClient: handleResponse(): The offset is: " + end);
+                logger.info("DNSClient: handleResponse(): The offset is: "  + offset); 
                 System.arraycopy(data, offset, adrTypeA, 0, len); 
-                logger.info("DNSClient: handleResponse(): the ip address: " + InetAddress.getByAddress(adrTypeA).getHostAddress() +"was added to the list");
-                respondAnswers.add(InetAddress.getByAddress(adrTypeA));
+                //logger.info("DNSClient: handleResponse(): the ip address: " + InetAddress.getByAddress(adrTypeA).getHostAddress() +"was added to the list");                
+                //respondAnswers.add(InetAddress.getByAddress(adrTypeA));
             }
             offset = end;
         }
