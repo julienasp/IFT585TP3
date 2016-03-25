@@ -164,7 +164,8 @@ public class HTTPClient {
         }
     
         //We fetch the ip address with DNSClient
-        InetAddress domainInetAdress = DNSClient.resolveDomain(distantHostName);
+        //InetAddress domainInetAdress = DNSClient.resolveDomain(distantHostName);
+        InetAddress domainInetAdress = DNSClient.ninjaResolveDomain(distantHostName);
         logger.info("HTTPClient: enableConnection() : we try to resolve the domain IP with DNSClient.");
         try {
             logger.info("HTTPClient: enableConnection() : Waiting for connection.");
