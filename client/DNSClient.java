@@ -124,24 +124,19 @@ public class DNSClient {
             int ttl = dis.readUnsignedShort();
             logger.info("DNSClient: handleResponse(): Answer ttl: " + ttl);
             int len = dis.readUnsignedShort();
-            
-            
-            
-            
-            
             logger.info("DNSClient: handleResponse(): Answer len: " + len);
             
             int end = offset + len;
-            logger.info("DNSClient: handleResponse(): la valeur de type est: " + type);
+            
             if(type == 1){ // TYPE A
+                logger.info("DNSClient: handleResponse(): We add the answer in the answer list");
                 byte[] adrTypeA = new byte[len];
+                logger.info("DNSClient: handleResponse(): The offset is: " + offset);
                 System.arraycopy(data, offset, adrTypeA, 0, len); 
+                logger.info("DNSClient: handleResponse(): the ip address: " + InetAddress.getByAddress(adrTypeA).getHostAddress() +"was added to the list");
                 respondAnswers.add(InetAddress.getByAddress(adrTypeA));
             }            
         }
-        
-        
-        
     }
  
     private static void sendQuery (String domainName, DatagramSocket socketDNS, InetAddress nameServer) throws IOException {
