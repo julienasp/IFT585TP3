@@ -13,8 +13,9 @@ public class StartPoint {
 	public static void main(String[] args) {
 
 		Scanner sc = new Scanner(System.in);
-                System.out.println("Veuillez choisir entre 1 ou 2. | 1-DNS Maison 2-DNS Java ?");
-                
+                System.out.println("Veuillez choisir entre 1 ou 2.");
+                System.out.println("1-DNS Maison.");
+                System.out.println("2-DNS Java.");
                 String choixDNS = sc.nextLine();
                 
                 System.out.println("Veuillez saisir le URL complet du site internet que vous souhaitez récupérer ? Ex. http://stackoverflow.com/questions or http://ici.radio-canada.ca/techno");             
