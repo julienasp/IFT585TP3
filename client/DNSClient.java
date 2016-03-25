@@ -7,6 +7,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -101,16 +102,17 @@ public class DNSClient {
             dataOut.writeShort (0); // nb of answers
             dataOut.writeShort (0); // nb of authorities
             dataOut.writeShort (0); // nb of additional
-            StringTokenizer labels = new StringTokenizer (queryHost, ".");
+            StringTokenizer labels = new StringTokenizer (domainName, ".");
             while (labels.hasMoreTokens ()) {
               String label = labels.nextToken ();
               dataOut.writeByte (label.length ());
               dataOut.writeBytes (label);
             }
             dataOut.writeByte (0);
-            dataOut.writeShort (queryType);
-            dataOut.writeShort (queryClass);
-          } catch (IOException ignored) {
+            dataOut.writeShort (255); // Request any
+            dataOut.writeShort (1); // Class Internet
+          } catch (IOException ex) {
+              Logger.getLogger(DNSClient.class.getName()).log(Level.SEVERE, null, ex);
         }
     return byteArrayOut.toByteArray ();
   }
