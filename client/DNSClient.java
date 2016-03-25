@@ -45,7 +45,7 @@ public class DNSClient {
     
     
     
-    /*public static InetAddress resolveDomain(String domain){        
+    public static InetAddress resolveDomain(String domain){        
         try {
             logger.info("DNSClient: the translation for the domain:" + domain + " is: " + InetAddress.getByName(domain).getHostAddress()); 
             return InetAddress.getByName(domain);
@@ -53,8 +53,9 @@ public class DNSClient {
             Logger.getLogger(DNSClient.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
-    }*/
-    public static InetAddress resolveDomain(String domain){        
+    }
+    
+    public static InetAddress ninjaResolveDomain(String domain){        
         try {
             logger.info("DNSClient: the translation for the domain:" + domain + " is: " + InetAddress.getByName(domain).getHostAddress());             
             boolean received = false;
