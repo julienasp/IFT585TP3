@@ -169,10 +169,13 @@ public class HTTPClient {
     
         //We fetch the ip address with DNSClient
         InetAddress domainInetAdress;
-        if(choixDNS == "1"){
+        logger.info("HTTPClient: enableConnection() : choixDNS:" + choixDNS);
+        if(choixDNS.equals("1")){
+            logger.info("HTTPClient: enableConnection() : using ninjaDNS.");
             domainInetAdress = DNSClient.ninjaResolveDomain(distantHostName);
         }
         else{
+            logger.info("HTTPClient: enableConnection() : using JavaDNS.");
             domainInetAdress = DNSClient.resolveDomain(distantHostName); 
         }        
        

@@ -60,7 +60,7 @@ public class DNSClient {
         DataOutputStream dataOut = new DataOutputStream (byteArrayOut);
         try {
             dataOut.writeShort(uniqueID);
-            dataOut.writeShort( (1 << 7) |(1 << 8) ); // Recursion Desired and Recursion Available
+            dataOut.writeShort((1 << 8)); // Recursion Desired and Recursion Available
             dataOut.writeShort(1); // nb of questions
             dataOut.writeShort(0); // nb of answers
             dataOut.writeShort(0); // nb of authorities

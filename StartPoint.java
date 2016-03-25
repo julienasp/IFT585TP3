@@ -13,7 +13,7 @@ public class StartPoint {
 	public static void main(String[] args) {
 
 		Scanner sc = new Scanner(System.in);
-                System.out.println("Veuillez choisir entre 1 ou 2 | 1-DNS Maison 2-DNS Java");
+                System.out.println("Veuillez choisir entre 1 ou 2. | 1-DNS Maison 2-DNS Java ?");
                 
                 String choixDNS = sc.nextLine();
                 
