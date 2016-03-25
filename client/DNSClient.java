@@ -79,6 +79,19 @@ public class DNSClient {
         }
         return byteArrayOut.toByteArray ();
     } 
+    
+    private static String readName(DataInputStream dis){
+        try {
+            int nbByteToRead = dis.readByte();
+            logger.info("DNSClient: readName(): Question nb of byte required for QNAME: " + nbByteToRead);
+            byte[] len = new byte[nbByteToRead];
+            dis.readFully(len);
+            return new String(len);
+        } catch (IOException ex) {
+            Logger.getLogger(DNSClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
     private static void handleResponse (byte[] data, int length, int offset) throws IOException {
         logger.info("DNSClient: handleResponse(): executed!");
         ByteArrayInputStream bais = new ByteArrayInputStream (data, 0, length);
@@ -99,18 +112,11 @@ public class DNSClient {
         // parse questions
         if (nbQuestions > 0){
             for (int i = 0; i < nbQuestions; i++){
-                int nbByteQName = dis.readByte();
-                logger.info("DNSClient: handleResponse(): Question # Of byte required for QNAME: " + nbByteQName);
-                byte[] len = new byte[nbByteQName];
-                dis.readFully(len);
-                String qname = new String(len);
+                
+                String qname = readName(dis);
                 logger.info("DNSClient: handleResponse(): Question QNAME: " + qname);
                 
-                int nbByteQNameEnd = dis.readByte();
-                logger.info("DNSClient: handleResponse(): Question # Of byte required for QNAME PART 2: " + nbByteQNameEnd);
-                len = new byte[nbByteQNameEnd];
-                dis.readFully(len);
-                String qname2 = new String(len);
+                String qname2 = readName(dis);
                 logger.info("DNSClient: handleResponse(): Question QNAME: " + qname2);
                 
                 int qtype = dis.readUnsignedShort();
@@ -124,11 +130,12 @@ public class DNSClient {
         respondAnswers = Collections.synchronizedList(new ArrayList(nbAnswers));
         
         for (int i = 0; i < nbAnswers; i++){
-            
-            byte[] lenString = new byte[dis.readUnsignedByte()];
+            int nbByteAnswer = dis.readByte();
+            logger.info("DNSClient: handleResponse(): Question nb of byte required for NAME: " + nbByteAnswer);
+            byte[] lenString = new byte[nbByteAnswer];
             dis.readFully(lenString);
-            String domain = new String(lenString);            
-            logger.info("DNSClient: handleResponse(): Answer string: " + domain);
+            String name = new String(lenString);            
+            logger.info("DNSClient: handleResponse(): Answer Name: " + name);
             int type = dis.readUnsignedShort();
             logger.info("DNSClient: handleResponse(): Answer Type: " + type);
             int dnsClass = dis.readUnsignedShort();
