@@ -86,7 +86,7 @@ public class DNSClient {
             String name = "";
             while(!endOfName){
                 int nbByteToRead = dis.readByte();
-                logger.info("DNSClient: readName(): Question nb of byte required for QNAME: " + nbByteToRead);
+                logger.info("DNSClient: readName(): nb of byte required for the name is: " + nbByteToRead);
                 if(nbByteToRead==0){
                     endOfName = true;
                     logger.info("DNSClient: readName(): the end of name marker was found!");
@@ -139,12 +139,8 @@ public class DNSClient {
         
         respondAnswers = Collections.synchronizedList(new ArrayList(nbAnswers));
         
-        for (int i = 0; i < nbAnswers; i++){
-            int nbByteAnswer = dis.readByte();
-            logger.info("DNSClient: handleResponse(): Question nb of byte required for NAME: " + nbByteAnswer);
-            byte[] lenString = new byte[nbByteAnswer];
-            dis.readFully(lenString);
-            String name = new String(lenString);            
+        for (int i = 0; i < nbAnswers; i++){            
+            String name = readName(dis);            
             logger.info("DNSClient: handleResponse(): Answer Name: " + name);
             int type = dis.readUnsignedShort();
             logger.info("DNSClient: handleResponse(): Answer Type: " + type);
