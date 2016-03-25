@@ -101,8 +101,11 @@ public class DNSClient {
             for (int i = 0; i < nbQuestions; i++){
                 byte[] len = new byte[dis.readUnsignedByte()];
                 dis.readFully(len);
-                dis.readUnsignedShort();
-                dis.readUnsignedShort();
+                int short1 = dis.readUnsignedShort();
+                int short2 = dis.readUnsignedShort();
+                logger.info("DNSClient: handleResponse(): Question string: " + new String(len));
+                logger.info("DNSClient: handleResponse(): Question short1: " + short1);
+                logger.info("DNSClient: handleResponse(): Question short2: " + short2);
             }
         }
         
@@ -110,12 +113,20 @@ public class DNSClient {
         
         for (int i = 0; i < nbAnswers; i++){
         
-            byte[] lenString = new byte[dis.readUnsignedByte()];                
-            String domain = new String();
+            byte[] lenString = new byte[dis.readUnsignedByte()];
+            dis.readFully(lenString);
+            String domain = new String(lenString);
             int type = dis.readUnsignedShort();
-            int clazz = dis.readUnsignedShort();
+            int dnsClass = dis.readUnsignedShort();
             int ttl = (dis.readUnsignedShort() << 16) + dis.readUnsignedShort();;
             int len = dis.readUnsignedShort();
+            
+            logger.info("DNSClient: handleResponse(): Answer string: " + new String(lenString));
+            logger.info("DNSClient: handleResponse(): Answer Type: " + type);
+            logger.info("DNSClient: handleResponse(): Answer dnsClass: " + dnsClass);
+            logger.info("DNSClient: handleResponse(): Answer ttl: " + ttl);
+            logger.info("DNSClient: handleResponse(): Answer len: " + len);
+            
             int end = offset + len;
             logger.info("DNSClient: handleResponse(): la valeur de type est: " + type);
             if(type == 1){ // TYPE A
