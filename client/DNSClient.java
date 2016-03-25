@@ -9,10 +9,14 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -27,10 +31,14 @@ import java.util.logging.Logger;
 public class DNSClient {
     private static final byte[] defaultAddr = new byte[]{8, 8, 8, 8};
     private static int uniqueID;
-    private InetAddress dnsAddr;    
+    private InetAddress dnsAddr;
+    private static List respondQuestions;
+    private static List<InetAddress> respondAnswers;
     private static final org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(DNSClient.class);  
 
-    public DNSClient() {       
+    public DNSClient() {
+        this.respondQuestions = Collections.EMPTY_LIST;
+        this.respondAnswers = Collections.EMPTY_LIST;
         try {             
             InetAddress dnsAddr = InetAddress.getByAddress(defaultAddr);
         } catch (UnknownHostException ex) {
@@ -46,13 +54,14 @@ public class DNSClient {
         this.dnsAddr = dnsAddr;
     }
     
-    private static byte[] buildQuery(String domainName){     
+    private static byte[] buildQuery(String domainName){
+        logger.info("DNSClient: buildQuery(): executed!");
         ByteArrayOutputStream byteArrayOut = new ByteArrayOutputStream ();
         DataOutputStream dataOut = new DataOutputStream (byteArrayOut);
         try {
             dataOut.writeShort(uniqueID);
             dataOut.writeShort( (1 << 7) |(1 << 8) ); // Recursion Desired and Recursion Available
-            dataOut.writeShort(1); // nb of queries
+            dataOut.writeShort(1); // nb of questions
             dataOut.writeShort(0); // nb of answers
             dataOut.writeShort(0); // nb of authorities
             dataOut.writeShort(0); // nb of additional
@@ -70,48 +79,70 @@ public class DNSClient {
         }
         return byteArrayOut.toByteArray ();
     } 
-    /*private static void handleResponse (byte[] data, int length) throws IOException {
+    private static void handleResponse (byte[] data, int length, int offset) throws IOException {
+        logger.info("DNSClient: handleResponse(): executed!");
         ByteArrayInputStream bais = new ByteArrayInputStream (data, 0, length);
         DataInputStream dis = new DataInputStream(bais);
         int id = dis.readUnsignedShort();
-        if (id != Short.parseShort(uniqueID));
-          throw new IOException ("ID does not match request");
+        if (id != uniqueID) throw new IOException ("ID does not match request");
         int flags = dis.readUnsignedShort();        
-        int nbQueries = dis.readUnsignedShort(); 
+        int nbQuestions = dis.readUnsignedShort(); 
         int nbAnswers = dis.readUnsignedShort(); 
         int nbAuthorities = dis.readUnsignedShort(); 
         int nbAdditional = dis.readUnsignedShort(); 
-        while (nbQueries -- > 0) { // discard questions
-          dnsIn.readDomainName ();
-          dis.readUnsignedShort();
-          dis.readUnsignedShort();
+        logger.info("DNSClient: handleResponse(): id: " + id);
+        logger.info("DNSClient: handleResponse(): flags: " + flags);
+        logger.info("DNSClient: handleResponse(): nbQuestions: " + nbQuestions);
+        logger.info("DNSClient: handleResponse(): nbAnswers: " + nbAnswers);
+        logger.info("DNSClient: handleResponse(): nbAuthorities: " + nbAuthorities);
+        logger.info("DNSClient: handleResponse(): nbAdditional: " + nbAdditional);
+        // parse questions
+        if (nbQuestions > 0){
+            for (int i = 0; i < nbQuestions; i++){
+                byte[] len = new byte[dis.readUnsignedByte()];
+                dis.readFully(len);
+                dis.readUnsignedShort();
+                dis.readUnsignedShort();
+            }
         }
-        try {
-          while (numAnswers -- > 0){
-            answers.addElement (dnsIn.readRR ());
-          }
-          while (numAuthorities -- > 0)
-            authorities.addElement (dnsIn.readRR ());
-          while (numAdditional -- > 0)
-            additional.addElement (dnsIn.readRR ());
-        } catch (EOFException ex) {
-          if (!truncated)
-            throw ex;
+        
+        respondAnswers = Collections.synchronizedList(new ArrayList(nbAnswers));
+        
+        for (int i = 0; i < nbAnswers; i++){
+        
+            byte[] lenString = new byte[dis.readUnsignedByte()];                
+            String domain = new String();
+            int type = dis.readUnsignedShort();
+            int clazz = dis.readUnsignedShort();
+            int ttl = (dis.readUnsignedShort() << 16) + dis.readUnsignedShort();;
+            int len = dis.readUnsignedShort();
+            int end = offset + len;
+            logger.info("DNSClient: handleResponse(): la valeur de type est: " + type);
+            if(type == 1){ // TYPE A
+                byte[] adrTypeA = new byte[len];
+                System.arraycopy(data, offset, adrTypeA, 0, len); 
+                respondAnswers.add(InetAddress.getByAddress(adrTypeA));
+            }            
         }
-    }*/
+        
+        
+        
+    }
  
     private static void sendQuery (String domainName, DatagramSocket socketDNS, InetAddress nameServer) throws IOException {
+        logger.info("DNSClient: sendQuery(): executed!");
         byte[] data = buildQuery(domainName);
         DatagramPacket packet = new DatagramPacket(data, data.length, nameServer, 53); // 53 is the default port
         socketDNS.send(packet);
     }
     
     private static void getResponse (DatagramSocket socketDNS) throws IOException {
+        logger.info("DNSClient: getResponse(): executed!"); 
         byte[] buffer = new byte[512]; // MAX SIZE UDP PACKET
         DatagramPacket packet = new DatagramPacket (buffer, buffer.length);
         socketDNS.receive(packet);
         logger.info("DNSClient: getResponse():" + new String(packet.getData())); 
-        //handleResponse(uniqueID, packet.getData(), packet.getLength());
+        handleResponse(packet.getData(), packet.getLength(), packet.getOffset());
     }
     
     public static InetAddress resolveDomain(String domain){        
@@ -137,21 +168,21 @@ public class DNSClient {
                   getResponse(socketDNS);
                   received = true;                
             }
-            
+            return respondAnswers.get(0);  
         } catch (UnknownHostException ex) {            
             Logger.getLogger(DNSClient.class.getName()).log(Level.SEVERE, null, ex);
         } catch (SocketException ex) {
             Logger.getLogger(DNSClient.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(DNSClient.class.getName()).log(Level.SEVERE, null, ex);
-        } finally{
-            
+        } finally{            
             // increase the unique id
             uniqueID++;
             
             if(socketDNS != null){
                 socketDNS.close ();
-            }            
+            }
+             
         }
         return null;
     }
