@@ -1,10 +1,13 @@
 package client;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,12 +57,12 @@ public class DNSClient {
         try {
             logger.info("DNSClient: the translation for the domain:" + domain + " is: " + InetAddress.getByName(domain).getHostAddress());             
             boolean received = false;
-            int count = 0;
             DatagramSocket socketDNS = new DatagramSocket ();
-            socketDNS.setSoTimeout (5000);
+            socketDNS.setSoTimeout (5000); // WE LIMIT THE WAIT TO 5SECS 
             
+            String uniqueID = UUID.randomUUID().toString();
             while (!received) {                
-                  sendQuery(domain, socketDNS, InetAddress.getByAddress(defaultAddr));
+                  sendQuery(domain, uniqueID,socketDNS, InetAddress.getByAddress(defaultAddr));
                   getResponse(socketDNS);
                   received = true;                
             } 
@@ -75,8 +78,8 @@ public class DNSClient {
         return null;
     }
 
-    public static void sendQuery (String domainName, DatagramSocket socketDNS, InetAddress nameServer) throws IOException {
-        byte[] data = buildQuery(domainName);
+    public static void sendQuery (String domainName, String uniqueID, DatagramSocket socketDNS, InetAddress nameServer) throws IOException {
+        byte[] data = buildQuery(domainName,uniqueID);
         DatagramPacket packet = new DatagramPacket(data, data.length, nameServer, 53); // 53 is the default port
         socketDNS.send (packet);
       }
@@ -86,6 +89,31 @@ public class DNSClient {
         DatagramPacket packet = new DatagramPacket (buffer, buffer.length);
         socketDNS.receive (packet);
         query.receiveResponse (packet.getData (), packet.getLength ());
-      }
+     }
+      
+    private static byte[] buildQuery(String domainName, String uniqueID){     
+        ByteArrayOutputStream byteArrayOut = new ByteArrayOutputStream ();
+        DataOutputStream dataOut = new DataOutputStream (byteArrayOut);
+        try {
+            dataOut.writeShort (Short.parseShort(uniqueID));
+            dataOut.writeShort ( (1 << 7) |(1 << 8) ); // Recursion Desired and Recursion Available
+            dataOut.writeShort (1); // nb of queries
+            dataOut.writeShort (0); // nb of answers
+            dataOut.writeShort (0); // nb of authorities
+            dataOut.writeShort (0); // nb of additional
+            StringTokenizer labels = new StringTokenizer (queryHost, ".");
+            while (labels.hasMoreTokens ()) {
+              String label = labels.nextToken ();
+              dataOut.writeByte (label.length ());
+              dataOut.writeBytes (label);
+            }
+            dataOut.writeByte (0);
+            dataOut.writeShort (queryType);
+            dataOut.writeShort (queryClass);
+          } catch (IOException ignored) {
+        }
+    return byteArrayOut.toByteArray ();
+  }
+    };
     
 }
