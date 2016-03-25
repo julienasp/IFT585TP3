@@ -121,7 +121,7 @@ public class DNSClient {
             logger.info("DNSClient: handleResponse(): Answer Type: " + type);
             int dnsClass = dis.readUnsignedShort();
             logger.info("DNSClient: handleResponse(): Answer dnsClass: " + dnsClass);
-            int ttl = dis.readUnsignedShort();
+            long ttl = (dis.readInt() & 0xffffffffL);
             logger.info("DNSClient: handleResponse(): Answer ttl: " + ttl);
             int len = dis.readUnsignedShort();
             logger.info("DNSClient: handleResponse(): Answer len: " + len);
@@ -131,11 +131,12 @@ public class DNSClient {
             if(type == 1){ // TYPE A
                 logger.info("DNSClient: handleResponse(): We add the answer in the answer list");
                 byte[] adrTypeA = new byte[len];
-                logger.info("DNSClient: handleResponse(): The offset is: " + offset);
+                logger.info("DNSClient: handleResponse(): The offset is: " + end);
                 System.arraycopy(data, offset, adrTypeA, 0, len); 
                 logger.info("DNSClient: handleResponse(): the ip address: " + InetAddress.getByAddress(adrTypeA).getHostAddress() +"was added to the list");
                 respondAnswers.add(InetAddress.getByAddress(adrTypeA));
-            }            
+            }
+            offset = end;
         }
     }
  
