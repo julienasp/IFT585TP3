@@ -80,11 +80,13 @@ public class DNSClient {
         return byteArrayOut.toByteArray ();
     } 
     
-    private static String readName(DataInputStream dis){
+    private static String readName(DataInputStream dis,DatagramPacket packet){
+        int bufferMark = 4;
         try {
             boolean endOfName = false;
             String name = "";
             while(!endOfName){
+                dis.mark(4);
                 byte myByte = dis.readByte();
                 //DETERMINE THE FORMAT
                 //0xc0 = 11000000
@@ -105,8 +107,12 @@ public class DNSClient {
                 } 
                 else{ // Pointer format will have 11 at the start
                     if((myByte & 0xc0) != 0xc0) throw new IOException ("Error!");
-                    int offset = dis.readUnsignedShort() & 0x3fff;
+                    dis.reset();
+                    int offset = dis.readUnsignedShort() & 0x3fff; // 0x3fff = 11111111111111, So we keep only the 14 last bits
                     logger.info("DNSClient: readName(): offset from the start should be: " + offset);
+                    ByteArrayInputStream nbais = new ByteArrayInputStream (packet.getData(), offset, packet.getLength() - offset);
+                    DataInputStream ndis = new DataInputStream(nbais);
+                    return readName(ndis,packet);
                 }
             }
             return name;
@@ -115,7 +121,10 @@ public class DNSClient {
         }
         return null;
     }
-    private static void handleResponse (byte[] data, int length, int offset) throws IOException {
+    private static void handleResponse (DatagramPacket packet) throws IOException {
+        byte[] data = packet.getData();
+        int length = packet.getLength();
+        int offset = packet.getOffset();
         logger.info("DNSClient: handleResponse(): executed!");
         ByteArrayInputStream bais = new ByteArrayInputStream (data, 0, length);
         DataInputStream dis = new DataInputStream(bais);
@@ -136,7 +145,7 @@ public class DNSClient {
         if (nbQuestions > 0){
             for (int i = 0; i < nbQuestions; i++){
                 
-                String qname = readName(dis);
+                String qname = readName(dis,packet);
                 logger.info("DNSClient: handleResponse(): Question QNAME: " + qname);
                 
                 int qtype = dis.readUnsignedShort();
@@ -150,7 +159,7 @@ public class DNSClient {
         respondAnswers = Collections.synchronizedList(new ArrayList(nbAnswers));
         
         for (int i = 0; i < nbAnswers; i++){            
-            String name = readName(dis);            
+            String name = readName(dis,packet);            
             logger.info("DNSClient: handleResponse(): Answer Name: " + name);
             int type = dis.readUnsignedShort();
             logger.info("DNSClient: handleResponse(): Answer Type: " + type);
@@ -189,7 +198,7 @@ public class DNSClient {
         socketDNS.receive(packet);
         if(packet.getLength() > 0){
             logger.info("DNSClient: getResponse():" + new String(packet.getData())); 
-            handleResponse(packet.getData(), packet.getLength(), packet.getOffset());
+            handleResponse(packet);
             return 1;
         }
         else return -1;        
