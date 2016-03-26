@@ -85,18 +85,28 @@ public class DNSClient {
             boolean endOfName = false;
             String name = "";
             while(!endOfName){
-                int nbByteToRead = dis.readByte();
-                logger.info("DNSClient: readName(): nb of byte required for the name is: " + nbByteToRead);
-                if(nbByteToRead==0){
-                    endOfName = true;
-                    logger.info("DNSClient: readName(): the end of name marker was found!");
-                }
-                else{                
-                    byte[] len = new byte[nbByteToRead];
-                    dis.readFully(len);
-                    String temp = new String(len);
-                    logger.info("DNSClient: readName(): We found the name: " + temp);
-                    name = (name.length() == 0) ? temp: name + "." + temp;
+                byte myByte = dis.readByte();
+                //DETERMINE THE FORMAT
+                //0xc0 = 11000000
+                if((myByte & 0xc0) == 0 ){// Label format need to have 00 at the start
+                    int nbByteToRead = myByte;
+                    logger.info("DNSClient: readName(): nb of byte required for the name is: " + nbByteToRead);
+                    if(nbByteToRead==0){
+                        endOfName = true;
+                        logger.info("DNSClient: readName(): the end of name marker was found!");
+                    }
+                    else{                
+                        byte[] len = new byte[nbByteToRead];
+                        dis.readFully(len);
+                        String temp = new String(len);
+                        logger.info("DNSClient: readName(): We found the name: " + temp);
+                        name = (name.length() == 0) ? temp: name + "." + temp;
+                    }
+                } 
+                else{ // Pointer format will have 11 at the start
+                    if((myByte & 0xc0) != 0xc0) throw new IOException ("Invalid domain name compression offset");
+                    int offset = dis.readUnsignedShort() & 0x3fff;
+                    dis.skip(offset); // We skip so we can read the name
                 }
             }
             return name;
@@ -172,13 +182,17 @@ public class DNSClient {
         socketDNS.send(packet);
     }
     
-    private static void getResponse (DatagramSocket socketDNS) throws IOException {
+    private static int getResponse (DatagramSocket socketDNS) throws IOException {
         logger.info("DNSClient: getResponse(): executed!"); 
         byte[] buffer = new byte[512]; // MAX SIZE UDP PACKET
         DatagramPacket packet = new DatagramPacket (buffer, buffer.length);
         socketDNS.receive(packet);
-        logger.info("DNSClient: getResponse():" + new String(packet.getData())); 
-        handleResponse(packet.getData(), packet.getLength(), packet.getOffset());
+        if(packet.getLength() > 0){
+            logger.info("DNSClient: getResponse():" + new String(packet.getData())); 
+            handleResponse(packet.getData(), packet.getLength(), packet.getOffset());
+            return 1;
+        }
+        else return -1;        
     }
     
     public static InetAddress resolveDomain(String domain){        
@@ -201,8 +215,7 @@ public class DNSClient {
             
             while (!received) {                
                   sendQuery(domain,socketDNS, InetAddress.getByAddress(defaultAddr));
-                  getResponse(socketDNS);
-                  received = true;                
+                  received = ( getResponse(socketDNS) == 1 ) ? true: false; //If timeout, we resend, otherwise we break the loop              
             }
             return respondAnswers.get(0);  
         } catch (UnknownHostException ex) {            
