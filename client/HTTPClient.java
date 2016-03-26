@@ -38,6 +38,7 @@ public class HTTPClient {
     private String distantHostName = null;
     private String distantHostURI = null;
     private Hashtable<String, String> imageList = new Hashtable<String,String>();
+    private Hashtable<String, InetAddress> dnsCache = new Hashtable<String,InetAddress>();
     private String choixDNS;
 
     public HTTPClient(String choixDNS) {
@@ -62,6 +63,38 @@ public class HTTPClient {
     public void setImageList(Hashtable<String, String> imageList) {
         this.imageList = imageList;
     }
+
+    public String getDistantHostName() {
+        return distantHostName;
+    }
+
+    public void setDistantHostName(String distantHostName) {
+        this.distantHostName = distantHostName;
+    }
+
+    public String getDistantHostURI() {
+        return distantHostURI;
+    }
+
+    public void setDistantHostURI(String distantHostURI) {
+        this.distantHostURI = distantHostURI;
+    }
+
+    public Hashtable<String, InetAddress> getDnsCache() {
+        return dnsCache;
+    }
+
+    public void setDnsCache(Hashtable<String, InetAddress> dnsCache) {
+        this.dnsCache = dnsCache;
+    }
+
+    public String getChoixDNS() {
+        return choixDNS;
+    }
+
+    public void setChoixDNS(String choixDNS) {
+        this.choixDNS = choixDNS;
+    }
     
     
     
@@ -75,6 +108,14 @@ public class HTTPClient {
     
     public void removeImageURLFromImageList(String imageName,String imageURL) {
        imageList.remove(imageName);
+    }
+    
+    public void addIpAdrToDnsCache(String domainName,InetAddress adr) {
+       dnsCache.put(domainName, adr);
+    }
+    
+    public void removeIpAdrFromDnsCache(String domainName) {
+       dnsCache.remove(domainName);
     }
     
     public void showImageListContent(){
@@ -166,19 +207,24 @@ public class HTTPClient {
         } catch (URISyntaxException ex) {
             Logger.getLogger(HTTPClient.class.getName()).log(Level.SEVERE, null, ex);
         }
-    
+        
         //We fetch the ip address with DNSClient
         InetAddress domainInetAdress;
-        logger.info("HTTPClient: enableConnection() : choixDNS:" + choixDNS);
-        if(choixDNS.equals("1")){
-            logger.info("HTTPClient: enableConnection() : using ninjaDNS.");
-            domainInetAdress = DNSClient.ninjaResolveDomain(distantHostName);
+        if(getDnsCache().contains(distantHostName)){            
+            domainInetAdress = getDnsCache().get(distantHostName);
         }
-        else{
-            logger.info("HTTPClient: enableConnection() : using JavaDNS.");
-            domainInetAdress = DNSClient.resolveDomain(distantHostName); 
-        }        
-       
+        else{       
+            logger.info("HTTPClient: enableConnection() : choixDNS:" + choixDNS);
+            if(choixDNS.equals("1")){
+                logger.info("HTTPClient: enableConnection() : using ninjaDNS.");
+                domainInetAdress = DNSClient.ninjaResolveDomain(distantHostName);
+                addIpAdrToDnsCache(distantHostName,domainInetAdress);
+            }
+            else{
+                logger.info("HTTPClient: enableConnection() : using JavaDNS.");
+                domainInetAdress = DNSClient.resolveDomain(distantHostName);                
+            }        
+        }
         logger.info("HTTPClient: enableConnection() : we try to resolve the domain IP with DNSClient.");
         try {
             logger.info("HTTPClient: enableConnection() : Waiting for connection.");

@@ -158,6 +158,7 @@ public class DNSClient {
         
         respondAnswers = Collections.synchronizedList(new ArrayList(nbAnswers));
         
+         
         for (int i = 0; i < nbAnswers; i++){            
             String name = readName(dis,packet);            
             logger.info("DNSClient: handleResponse(): Answer Name: " + name);
@@ -170,17 +171,13 @@ public class DNSClient {
             int len = dis.readUnsignedShort();
             logger.info("DNSClient: handleResponse(): Answer len: " + len);
             
-            int end = offset + len;
-            
             if(type == 1){ // TYPE A
                 logger.info("DNSClient: handleResponse(): We add the answer in the answer list");
                 byte[] adrTypeA = new byte[len];
-                logger.info("DNSClient: handleResponse(): The offset is: "  + offset); 
-                System.arraycopy(data, offset, adrTypeA, 0, len); 
-                //logger.info("DNSClient: handleResponse(): the ip address: " + InetAddress.getByAddress(adrTypeA).getHostAddress() +"was added to the list");                
-                //respondAnswers.add(InetAddress.getByAddress(adrTypeA));
-            }
-            offset = end;
+                dis.readFully(adrTypeA);                
+                logger.info("DNSClient: handleResponse(): the ip address: " + InetAddress.getByAddress(adrTypeA).getHostAddress() +" was added to the list");                
+                respondAnswers.add(InetAddress.getByAddress(adrTypeA));
+            }           
         }
     }
  
@@ -226,6 +223,7 @@ public class DNSClient {
                   sendQuery(domain,socketDNS, InetAddress.getByAddress(defaultAddr));
                   received = ( getResponse(socketDNS) == 1 ) ? true: false; //If timeout, we resend, otherwise we break the loop              
             }
+            logger.info("DNSClient: the translation for the domain:" + domain + " should be: " + InetAddress.getByName(domain).getHostAddress()); 
             return respondAnswers.get(0);  
         } catch (UnknownHostException ex) {            
             Logger.getLogger(DNSClient.class.getName()).log(Level.SEVERE, null, ex);
