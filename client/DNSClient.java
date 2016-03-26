@@ -104,9 +104,9 @@ public class DNSClient {
                     }
                 } 
                 else{ // Pointer format will have 11 at the start
-                    if((myByte & 0xc0) != 0xc0) throw new IOException ("Invalid domain name compression offset");
+                    if((myByte & 0xc0) != 0xc0) throw new IOException ("Error!");
                     int offset = dis.readUnsignedShort() & 0x3fff;
-                    dis.skip(offset); // We skip so we can read the name
+                    logger.info("DNSClient: readName(): offset from the start should be: " + offset);
                 }
             }
             return name;
