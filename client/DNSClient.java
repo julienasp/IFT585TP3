@@ -171,10 +171,10 @@ public class DNSClient {
             int len = dis.readUnsignedShort();
             logger.info("DNSClient: handleResponse(): Answer len: " + len);
             
-            if(type == 1){ // TYPE A
-                logger.info("DNSClient: handleResponse(): We add the answer in the answer list");
-                byte[] adrTypeA = new byte[len];
-                dis.readFully(adrTypeA);                
+            logger.info("DNSClient: handleResponse(): We add the answer in the answer list");
+            byte[] adrTypeA = new byte[len];
+            dis.readFully(adrTypeA);
+            if(type == 1){ // TYPE A                               
                 logger.info("DNSClient: handleResponse(): the ip address: " + InetAddress.getByAddress(adrTypeA).getHostAddress() +" was added to the list");                
                 respondAnswers.add(InetAddress.getByAddress(adrTypeA));
             }           
